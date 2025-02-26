@@ -1,0 +1,36 @@
+{
+  "name": "kindle-library-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "ts-node src/test.ts",
+    "dev": "ts-node src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "@types/unzipper": "^0.10.10",
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "meilisearch": "^0.48.2",
+    "mime-types": "^2.1.35",
+    "multer": "^1.4.5-lts.1",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3",
+    "unzipper": "^0.12.3",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/mime-types": "^2.1.4",
+    "@types/xml2js": "^0.4.14"
+  }
+}

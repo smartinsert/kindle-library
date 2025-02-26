@@ -1,0 +1,4 @@
+**/node_modules/
+**/*.db
+**/books.db
+
