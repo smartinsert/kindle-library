@@ -47,6 +47,13 @@ app.use('/epub', (req, res, next) => {
     );
   }
 
+  if (decodedPath.startsWith('//Users/ankitthakur/Workspace/books/')) {
+    decodedPath = decodedPath.replace(
+      '//Users/ankitthakur/Workspace/books/',
+      '/'
+    );
+  }
+
   console.log('Final request path:', decodedPath);
   // Update req.url to match express.static()'s expectation
   req.url = decodedPath;
