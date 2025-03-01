@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { Book } from '../types/types';
 import EpubReader from './epub-reader';
-import EpubReaderNative from './epub-reader-native';
 
 const BookCard: React.FC<{ book: Book }> = ({ book }) => {
   const [epubPath, setEpubPath] = useState<string | null>(null);

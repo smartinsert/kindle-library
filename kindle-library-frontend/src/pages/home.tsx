@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Container,
   Grid,
@@ -24,14 +24,14 @@ const Home: React.FC = () => {
     fetchAllBooks();
   }, []);
 
-  const fetchAllBooks = async () => {
+  const fetchAllBooks = useCallback(async () => {
     try {
       const response = await axios.get<Book[]>('http://localhost:5000/books');
       setBooks(response.data);
     } catch (err) {
       console.error('Error fetching books: ', err);
     }
-  };
+  }, []);
 
   const handleSearch = async () => {
     try {
@@ -72,16 +72,21 @@ const Home: React.FC = () => {
             backgroundColor: '#F4F1EC',
           }}
         >
-          <Typography
-            variant='h5'
+          <Button
             sx={{
-              fontWeight: 'bold',
+              textTransform: 'none',
               color: '#333',
-              fontFamily: 'DM Serif Display',
             }}
+            onClick={fetchAllBooks}
           >
-            Kindle Library
-          </Typography>
+            <Typography
+              variant='h5'
+              fontFamily='DM Serif Display'
+              fontWeight='bold'
+            >
+              Kindle Library
+            </Typography>
+          </Button>
           <Box
             sx={{
               display: 'flex',
@@ -96,6 +101,15 @@ const Home: React.FC = () => {
               placeholder='Search books or authors...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (searchQuery.length > 0) {
+                    handleSearch();
+                  } else {
+                    fetchAllBooks();
+                  }
+                }
+              }}
               sx={{ width: 250 }}
             />
             <IconButton onClick={handleSearch}>
