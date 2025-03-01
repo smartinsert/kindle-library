@@ -81,6 +81,9 @@ Books are stored in the following structure:
 - Add **book tagging & categorization**.
 - Support **more file formats (PDF, AZW3, etc.)**.
 
+## Progress
+- https://trello.com/b/LMNKSMhQ/kindly-library
+
 ## 📜 License
 This project is open-source under the **MIT License**.
 
