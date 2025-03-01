@@ -14,15 +14,17 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  Box,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Fullscreen,
   FullscreenExit,
-  Bookmark,
+  Bookmark as BookmarkIcon,
   NavigateBefore,
-  NavigateNext,
+  NavigateNext as NavigateNextIcon,
   MenuBook as MenuBookIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 
 interface EpubReaderProps {
@@ -52,14 +54,29 @@ const EpubReader: React.FC<EpubReaderProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [toc, setToc] = useState<any[]>([]);
+  const [bookmarks, setBookmarks] = useState<
+    { cfi: string; label: string; book: string }[]
+  >([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewerReady, setIsViewerReady] = useState<boolean>(false);
+  const [showTOC, setShowTOC] = useState<boolean>(false);
 
   const setViewerRef = useCallback((node: HTMLDivElement | null) => {
     if (node !== null) {
       viewerRef.current = node;
       setIsViewerReady(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const savedBookmarks = JSON.parse(
+      localStorage.getItem('bookmarks') || '[]'
+    );
+    const bookMarksForBook = savedBookmarks.filter(
+      (bookmark: { cfi: string; label: string; book: string }) =>
+        bookmark.book === bookTitle
+    );
+    setBookmarks(bookMarksForBook);
   }, []);
 
   useEffect(() => {
@@ -97,6 +114,52 @@ const EpubReader: React.FC<EpubReaderProps> = ({
     return () => bookInstance.destroy();
   }, [isViewerReady]);
 
+  const addBookmark = () => {
+    if (!renditionRef.current || !bookRef.current) return;
+
+    const currentLocation = renditionRef.current.location;
+
+    if (
+      !currentLocation ||
+      !currentLocation.start ||
+      !currentLocation.start.cfi
+    )
+      return;
+
+    const cfi = currentLocation.start.cfi;
+    const label = `${
+      bookRef.current.navigation.get(currentLocation.start.href)?.label ||
+      'Unknown'
+    }`;
+    const book = bookTitle;
+
+    const savedBookmarks = JSON.parse(
+      localStorage.getItem('bookmarks') || '[]'
+    );
+    const doesBookmarkExist = savedBookmarks.some(
+      (bookmark: { cfi: string }) => bookmark.cfi === cfi
+    );
+    if (!doesBookmarkExist) {
+      const newBookmarks = [...bookmarks, { cfi, label, book }];
+      setBookmarks(newBookmarks);
+      localStorage.setItem('bookmarks', JSON.stringify(newBookmarks));
+    }
+  };
+
+  const removeBookmark = (cfi: string) => {
+    const filteredBookmarks = bookmarks.filter(
+      (bookmark) => bookmark.cfi !== cfi
+    );
+    setBookmarks(filteredBookmarks);
+    localStorage.setItem('bookmarks', JSON.stringify(filteredBookmarks));
+  };
+
+  const goToBookmark = (cfi: string) => {
+    if (renditionRef.current) {
+      renditionRef.current.display(cfi);
+    }
+  };
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
@@ -129,6 +192,18 @@ const EpubReader: React.FC<EpubReaderProps> = ({
     if (renditionRef.current) {
       renditionRef.current.next();
     }
+  };
+
+  const enableToc = () => {
+    console.log(`Enabling toc`);
+    setShowTOC(true);
+    toggleDrawer();
+  };
+
+  const enableBookmark = () => {
+    addBookmark();
+    setShowTOC(false);
+    toggleDrawer();
   };
 
   const toggleDrawer = () => {
@@ -164,7 +239,7 @@ const EpubReader: React.FC<EpubReaderProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Table of Contents */}
           <IconButton
-            onClick={toggleDrawer}
+            onClick={enableToc}
             sx={{ color: 'white' }}
           >
             <MenuBookIcon />
@@ -173,7 +248,7 @@ const EpubReader: React.FC<EpubReaderProps> = ({
           {bookTitle}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           {/* Navigation Controls */}
           <IconButton
             onClick={prevPage}
@@ -186,7 +261,7 @@ const EpubReader: React.FC<EpubReaderProps> = ({
             onClick={nextPage}
             sx={{ color: 'white' }}
           >
-            <NavigateNext />
+            <NavigateNextIcon />
           </IconButton>
 
           {/* Theme Selector */}
@@ -213,8 +288,11 @@ const EpubReader: React.FC<EpubReaderProps> = ({
           </IconButton>
 
           {/* Bookmark */}
-          <IconButton sx={{ color: 'white' }}>
-            <Bookmark />
+          <IconButton
+            onClick={enableBookmark}
+            sx={{ color: 'white' }}
+          >
+            <BookmarkIcon />
           </IconButton>
 
           {/* Close Button */}
@@ -224,7 +302,7 @@ const EpubReader: React.FC<EpubReaderProps> = ({
           >
             <CloseIcon />
           </IconButton>
-        </div>
+        </Box>
       </DialogTitle>
 
       {/* Table of Contents Drawer (inside DialogTitle) */}
@@ -246,18 +324,34 @@ const EpubReader: React.FC<EpubReaderProps> = ({
           },
         }}
       >
-        <List>
-          {toc.map((item, index) => (
-            <ListItem
-              key={index}
-              disablePadding
-            >
-              <ListItemButton onClick={() => handleTocClick(item.href)}>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        {showTOC ? (
+          <List>
+            {toc.map((item, index) => (
+              <ListItem
+                key={index}
+                disablePadding
+              >
+                <ListItemButton onClick={() => handleTocClick(item.href)}>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <List>
+            {bookmarks.map((bookmark, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={bookmark.label} />
+                <IconButton onClick={() => goToBookmark(bookmark.cfi)}>
+                  <NavigateNextIcon />
+                </IconButton>
+                <IconButton onClick={() => removeBookmark(bookmark.cfi)}>
+                  <DeleteIcon />
+                </IconButton>
+              </ListItem>
+            ))}
+          </List>
+        )}
       </Drawer>
 
       {/* Main Content (Epub Reader) */}
